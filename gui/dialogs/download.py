@@ -22,18 +22,11 @@ from gui.comfy_executor import ComfyExecutor
 from gui.image_panel import ImagePanel
 from gui.async_utils import AsyncShowDialogModal, on_close
 
-CHECKPOINTS = [
-    "Based64Mix-v3",
-    "Based64",
-    "AbyssOrangeMix2_nsfw",
-    "animefull",
-    "animefull",
-    "v1-5-",
-]
-VAES = ["animefull-latest", "kl-f8-anime", "vae-ft-mse"]
-
-DEFAULT_POSITIVE_PROMPT = "masterpiece"
-DEFAULT_NEGATIVE_PROMPT = "(worst quality, low quality:1.2)"
+CHECKPOINTS_DIR = r"D:\sd\ComfyUI\models\checkpoints"
+VAES_DIR = r"D:\sd\ComfyUI\models\vaes"
+LORAS_DIR = r"D:\sd\ComfyUI\models\loras"
+DEFAULT_POSITIVE_PROMPT = "male, canine, canis, domestic dog, fur, gym"
+DEFAULT_NEGATIVE_PROMPT = "(female:1.4), (deformed, distorted, disfigured:1.3), poorly drawn, extra limb, missing limb, floating limbs, (mutated hands and fingers:1.4), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation, no arms, text, watermark, (worst quality:1.4), (low quality:1.4), (monochrome:1.1), bad_quality, watermark, font, text, username, poorly drawn eyes, blurry eyes, (pussy:1.1), vagina, feral,"
 
 
 def load_prompt(name):
@@ -64,34 +57,53 @@ class PreviewPromptData:
 
     def to_prompt(self):
         prompt = load_prompt("default.json")
+        keys_to_attributes = {
+            "seed": self.seed, 
+            "ckpt_name": self.checkpoint, 
+            "vae_name": self.vae, 
+        }
+        
+        
 
-        prompt["3"]["inputs"]["seed"] = self.seed
-        prompt["4"]["inputs"]["ckpt_name"] = self.checkpoint
-        prompt["11"]["inputs"]["vae_name"] = self.vae
-        prompt["6"]["inputs"]["text"] = self.positive
-        prompt["7"]["inputs"]["text"] = self.negative
-        prompt["10"]["inputs"]["lora_name"] = self.lora_name
-
+        for key, section in prompt.items():
+            if "inputs" in section:
+                for input_key, attribute in keys_to_attributes.items():
+                    if input_key in section["inputs"]:
+                        section["inputs"][input_key] = attribute
+        
+        prompt["23"]["inputs"]["switch_1"] ="On"
+        prompt["23"]["inputs"]["lora_name_1"] = self.lora_name
+        if self.lora_name == "add_detail.safetensors":
+            prompt["23"]["inputs"]["switch_1"] = "Off"
         return prompt
 
     def to_hr_prompt(self, image):
-        prompt = load_prompt("hr.json")
-        filename = image["filename"]
+        prompt = load_prompt("default.json")
+        keys_to_attributes = {
+            "seed": self.seed, 
+            "ckpt_name": self.checkpoint, 
+            "vae_name": self.vae, 
+        }
 
-        prompt["11"]["inputs"]["seed"] = self.seed
-        prompt["11"]["inputs"]["denoise"] = self.denoise
-        prompt["16"]["inputs"]["ckpt_name"] = self.checkpoint
-        prompt["17"]["inputs"]["vae_name"] = self.vae
-        prompt["6"]["inputs"]["text"] = self.positive
-        prompt["7"]["inputs"]["text"] = self.negative
-        prompt["21"]["inputs"]["lora_name"] = self.lora_name
-        prompt["18"]["inputs"]["image"] = f"{filename} [output]"
-
+        for key, section in prompt.items():
+            if "inputs" in section:
+                for input_key, attribute in keys_to_attributes.items():
+                    if input_key in section["inputs"]:
+                        section["inputs"][input_key] = attribute
+        prompt["10"]["inputs"]["lora_name"] = self.lora_name
         return prompt
 
 
 class CancelException(Exception):
     pass
+
+
+def find_files(directory, extension):
+    if not os.path.exists(directory):
+        raise FileNotFoundError(f"The directory {directory} does not exist.")
+    files = [file for file in os.listdir(directory)
+             if os.path.isfile(os.path.join(directory, file)) and file.endswith(extension)]
+    return files
 
 
 def find_preview_images(basepath):
@@ -135,38 +147,34 @@ class PreviewGeneratorDialog(wx.Dialog):
 
         utils.set_icons(self)
 
-        tags = self.get_tags(items[0], count=20)
-        if not tags:
-            tags = ["1girl", "solo"]
-        tags = ", ".join([t.strip() for t in tags])
-        positive = ", ".join([DEFAULT_POSITIVE_PROMPT, tags])
+        positive = DEFAULT_POSITIVE_PROMPT
         self.autogen = False
 
         # Parameter controls
         self.text_prompt_before = wx.TextCtrl(
-            self,
-            id=wx.ID_ANY,
-            value=positive,
-            size=self.Parent.FromDIP(wx.Size(250, 100)),
-            style=wx.TE_MULTILINE | wx.TE_PROCESS_ENTER,
+            self, 
+            id=wx.ID_ANY, 
+            value=positive, 
+            size=self.Parent.FromDIP(wx.Size(250, 100)), 
+            style=wx.TE_MULTILINE | wx.TE_PROCESS_ENTER, 
         )
         self.text_prompt_after = wx.TextCtrl(
-            self,
-            id=wx.ID_ANY,
-            value=DEFAULT_NEGATIVE_PROMPT,
-            size=self.Parent.FromDIP(wx.Size(250, 100)),
-            style=wx.TE_MULTILINE | wx.TE_PROCESS_ENTER,
+            self, 
+            id=wx.ID_ANY, 
+            value=DEFAULT_NEGATIVE_PROMPT, 
+            size=self.Parent.FromDIP(wx.Size(250, 100)), 
+            style=wx.TE_MULTILINE | wx.TE_PROCESS_ENTER, 
         )
 
         # self.label_n_tags = wx.StaticText(self, wx.ID_ANY, label="# Top Tags")
         # self.spinner_n_tags = wx.SpinCtrl(
-        #     self,
-        #     id=wx.ID_ANY,
-        #     value="",
-        #     style=wx.SP_ARROW_KEYS,
-        #     min=-1,
-        #     max=100,
-        #     initial=10,
+        #     self, 
+        #     id=wx.ID_ANY, 
+        #     value="", 
+        #     style=wx.SP_ARROW_KEYS, 
+        #     min=-1, 
+        #     max=100, 
+        #     initial=10, 
         # )
 
         # tag_totals = combine_tag_freq(items[0].get("tag_frequency") or {})
@@ -175,24 +183,24 @@ class PreviewGeneratorDialog(wx.Dialog):
         #     self.spinner_n_tags.SetValue(0)
 
         self.spinner_seed = wx.SpinCtrl(
-            self,
-            id=wx.ID_ANY,
-            value="",
-            style=wx.SP_ARROW_KEYS,
-            min=-1,
-            max=2**16,
-            initial=-1,
-            size=self.Parent.FromDIP(wx.Size(100, 25)),
+            self, 
+            id=wx.ID_ANY, 
+            value="", 
+            style=wx.SP_ARROW_KEYS, 
+            min=-1, 
+            max=2**16, 
+            initial=-1, 
+            size=self.Parent.FromDIP(wx.Size(100, 25)), 
         )
 
         self.spinner_denoise = floatspin.FloatSpin(
-            self,
-            id=wx.ID_ANY,
-            min_val=0,
-            max_val=1,
-            increment=0.01,
-            value=0.55,
-            agwStyle=floatspin.FS_LEFT,
+            self, 
+            id=wx.ID_ANY, 
+            min_val=0, 
+            max_val=1, 
+            increment=0.01, 
+            value=0.55, 
+            agwStyle=floatspin.FS_LEFT, 
         )
         self.spinner_denoise.SetFormat("%f")
         self.spinner_denoise.SetDigits(2)
@@ -219,7 +227,8 @@ class PreviewGeneratorDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnCancel, id=wx.ID_CANCEL)
         # self.text_prompt_before.Bind(wx.EVT_TEXT_ENTER, self.OnRegenerate)
         # self.text_prompt_after.Bind(wx.EVT_TEXT_ENTER, self.OnRegenerate)
-        wxasync.AsyncBind(wx.EVT_BUTTON, self.OnOK, self.button_ok, id=wx.ID_OK)
+        wxasync.AsyncBind(wx.EVT_BUTTON, self.OnOK, 
+                          self.button_ok, id=wx.ID_OK)
         wxasync.AsyncBind(wx.EVT_CLOSE, self.OnClose, self)
 
         sizerB = wx.StdDialogButtonSizer()
@@ -236,41 +245,45 @@ class PreviewGeneratorDialog(wx.Dialog):
 
         # sizerRightMid = wx.BoxSizer(wx.HORIZONTAL)
         # sizerRightMid.Add(
-        #     self.label_n_tags,
-        #     proportion=1,
-        #     border=5,
-        #     flag=wx.ALL,
+        #     self.label_n_tags, 
+        #     proportion=1, 
+        #     border=5, 
+        #     flag=wx.ALL, 
         # )
         # sizerRightMid.Add(self.spinner_n_tags, proportion=1, flag=wx.ALL, border=5)
 
         sizerRightAfter = wx.BoxSizer(wx.HORIZONTAL)
         sizerRightAfter.Add(
-            wx.StaticText(self, wx.ID_ANY, label="Seed"),
-            proportion=0,
-            border=5,
-            flag=wx.ALL,
+            wx.StaticText(self, wx.ID_ANY, label="Seed"), 
+            proportion=0, 
+            border=5, 
+            flag=wx.ALL, 
         )
-        sizerRightAfter.Add(self.spinner_seed, proportion=1, flag=wx.ALL, border=5)
+        sizerRightAfter.Add(self.spinner_seed, proportion=1, 
+                            flag=wx.ALL, border=5)
         sizerRightAfter.Add(
-            wx.StaticText(self, wx.ID_ANY, label="Denoise"),
-            proportion=0,
-            border=5,
-            flag=wx.ALL,
+            wx.StaticText(self, wx.ID_ANY, label="Denoise"), 
+            proportion=0, 
+            border=5, 
+            flag=wx.ALL, 
         )
-        sizerRightAfter.Add(self.spinner_denoise, proportion=1, flag=wx.ALL, border=5)
+        sizerRightAfter.Add(self.spinner_denoise, 
+                            proportion=1, flag=wx.ALL, border=5)
 
         sizerRight = wx.StaticBoxSizer(wx.VERTICAL, self, label="Parameters")
         sizerRight.Add(wx.StaticText(self, wx.ID_ANY, label="Positive"))
-        sizerRight.Add(self.text_prompt_before, proportion=2, flag=wx.ALL | wx.EXPAND)
+        sizerRight.Add(self.text_prompt_before, 
+                       proportion=2, flag=wx.ALL | wx.EXPAND)
         # sizerRight.Add(sizerRightMid, proportion=1, flag=wx.ALL)
         sizerRight.Add(wx.StaticText(self, wx.ID_ANY, label="Negative"))
-        sizerRight.Add(self.text_prompt_after, proportion=2, flag=wx.ALL | wx.EXPAND)
+        sizerRight.Add(self.text_prompt_after, proportion=2, 
+                       flag=wx.ALL | wx.EXPAND)
         sizerRight.Add(sizerRightAfter, proportion=1, flag=wx.ALL)
         sizerRight.Add(
-            self.models_text,
-            proportion=0,
-            border=5,
-            flag=wx.ALL,
+            self.models_text, 
+            proportion=0, 
+            border=5, 
+            flag=wx.ALL, 
         )
 
         sizerMain = wx.FlexGridSizer(1, 2, 10, 10)
@@ -294,51 +307,32 @@ class PreviewGeneratorDialog(wx.Dialog):
         self.app.SetStatusText("Saving preview...")
         self.status_text.SetLabel("Saving preview...")
 
-        image_data = self.comfy_api.get_image(
-            result["filename"], result["subfolder"], result["type"]
-        )
-        filepath = item["filepath"]
-        basepath = os.path.splitext(filepath)[0]
-
+        image_data = self.comfy_api.get_image(result["filename"], result["subfolder"], result["type"])
+        basepath = os.path.splitext(item["filepath"])[0]
         path = basepath + ".png"
+
         if os.path.exists(path):
             i = 0
-            found = None
-            while found is None:
-                if i == 0:
-                    p = f"{basepath}.preview.png"
-                else:
-                    p = f"{basepath}.preview.{i}.png"
-                if not os.path.exists(p):
-                    found = p
+            while os.path.exists(f"{basepath}.preview.{i or ''}.png"):
                 i += 1
+            path = f"{basepath}.preview.{i}.png" if self.duplicate_op == "append" else shutil.move(path, f"{basepath}.preview.{i}.png")
 
-            if self.duplicate_op == "append":
-                path = found
-            else:  # replace
-                shutil.move(path, found)
+        try:
+            with open(path, "wb") as f:
+                f.write(image_data)
+        except FileNotFoundError:
+            print(f"File {path} not found. Skipping...")
+            return
 
-        # Write the image
-        with open(path, "wb") as f:
-            f.write(image_data)
-
-        # Update the metadata
-        new_images = find_preview_images(basepath)
-        new_images = [
-            {"filepath": path, "is_autogenerated": True} for path in new_images  # TODO
-        ]
-
-        changes = {"preview_images": new_images}
-        print(changes)
-        result = await self.app.api.update_lora(item["id"], changes)
-        print(result)
+        new_images = [{"filepath": path, "is_autogenerated": True} for path in find_preview_images(basepath)]
+        await self.app.api.update_lora(item["id"], {"preview_images": new_images})
         item["preview_images"] = new_images
 
         try_load_image.cache_clear()
         await self.app.frame.results_panel.refresh_one_item(item)
 
         self.app.SetStatusText(f"Saved preview to {path}")
-
+        
     async def OnOK(self, evt):
         self.button_regenerate.Disable()
         self.button_upscale.Disable()
@@ -424,38 +418,37 @@ class PreviewGeneratorDialog(wx.Dialog):
         if e is not None:
             e.set()
 
-    def find_checkpoint(self):
-        checkpoints = self.comfy_api.get_filepaths("checkpoints")["filepaths"]
-        if not checkpoints:
-            return None
-        for name in CHECKPOINTS:
-            name = name.lower()
-            for ckpt in checkpoints:
-                if os.path.basename(ckpt).lower().startswith(name):
-                    return ckpt
-        print(
-            f"WARNING: Couldn't find recommended checkpoint, using first in list: {checkpoints[0]}"
-        )
-        return checkpoints[0]
+    def get_lora_name(self, item):
+        item_filename = os.path.basename(item['filepath'])
+        matched_lora = self.find_file_recursive(LORAS_DIR, item_filename.lower(), ".safetensors")
+        return item_filename if matched_lora else 'add_detail.safetensors'
 
-    def find_vae(self):
-        vaes = self.comfy_api.get_filepaths("vae")["filepaths"]
-        if not vaes:
-            return None
-        for name in VAES:
-            name = name.lower()
-            for vae in vaes:
-                if os.path.basename(vae).lower().startswith(name):
-                    return vae
-        print(f"WARNING: Couldn't find recommended VAE, using first in list: {vaes[0]}")
-        return vaes[0]
+    def find_file_recursive(self, directory, target_filename, extension):
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file.lower().endswith(extension) and target_filename in file.lower():
+                    return os.path.join(root, file)
+        return None
+
+    def find_checkpoint(self, item):
+        checkpoints_dir = r"D:\sd\ComfyUI\models\checkpoints"
+        item_filename = os.path.basename(item['filepath'])
+        matched_checkpoint = self.find_file_recursive(checkpoints_dir, item_filename.lower(), ".safetensors")
+        return item_filename if matched_checkpoint else "coconutFurryMix2_coconut20Av3.safetensors"
+
+    def find_vae(self, item):
+        vaes_dir = r"D:\sd\ComfyUI\models\vaes"
+        item_filename = os.path.basename(item['filepath'])
+        matched_vae = self.find_file_recursive(vaes_dir, item_filename.lower(), ".pt")
+        return item_filename if matched_vae else "MoistMixV2.vae.pt"
 
     def get_tags(self, item, count=None):
         tags = []
         tag_freq = item.get("tag_frequency")
         if tag_freq is not None:
             totals = utils.combine_tag_freq(tag_freq)
-            sort = list(sorted(totals.items(), key=lambda p: p[1], reverse=True))
+            sort = list(
+                sorted(totals.items(), key=lambda p: p[1], reverse=True))
             tags = [p[0] for p in sort]
             if count is not None:
                 tags = tags[:count]
@@ -463,57 +456,25 @@ class PreviewGeneratorDialog(wx.Dialog):
 
     def get_prompt_options(self):
         return GeneratePreviewsOptions(
-            self.text_prompt_before.GetValue(),
-            self.text_prompt_after.GetValue(),
-            20,
-            self.spinner_seed.GetValue(),
-            self.spinner_denoise.GetValue(),
+            self.text_prompt_before.GetValue(), 
+            self.text_prompt_after.GetValue(), 
+            20, 
+            self.spinner_seed.GetValue(), 
+            self.spinner_denoise.GetValue(), 
         )
-
-    def get_lora_name(self, item):
-        filepath = item["filepath"]
-        folder_name = "loras"
-        lora_name = self.comfy_api.get_relative_path(folder_name, filepath)[
-            "relative_path"
-        ]
-        if lora_name is None:
-            raise RuntimeError(
-                f"LoRA not found in ComfyUI models list.\nEnsure it's included under the list of paths to scan in the ComfyUI configuration.\n{filepath}"
-            )
-        return lora_name
 
     def assemble_prompt_data(self, item):
+        print(item)
         options = self.get_prompt_options()
-
         lora_name = self.get_lora_name(item)
-
-        checkpoint = self.find_checkpoint()
-        if checkpoint is None:
-            raise RuntimeError(
-                f"Couldn't find a Stable Diffusion checkpoint to use from this list:\n{', '.join(CHECKPOINTS)}"
-            )
-
-        vae = self.find_vae()
-        if vae is None:
-            raise RuntimeError(
-                f"Couldn't find a Stable Diffusion VAE to use from this list:\n{', '.join(VAES)}"
-            )
-
-        if options.seed == -1:
-            seed = random.randint(0, 2**16)
-        else:
-            seed = options.seed
-
+        checkpoint = self.find_checkpoint(item)
+        vae = "MoistMixV2.vae.pt"
+        seed = random.randint(0, 2**16) if options.seed == -1 else options.seed
         denoise = options.denoise
-
-        print(f"Seed: {seed}")
-
         positive = f"{options.prompt_before}"
         negative = options.prompt_after
-
         data = PreviewPromptData(
-            seed, denoise, checkpoint, vae, positive, negative, lora_name
-        )
+            seed, denoise, checkpoint, vae, positive, negative, lora_name)
         return data
 
     def enqueue_prompt_and_wait(self, executor, prompt):
@@ -643,10 +604,10 @@ class PreviewGeneratorDialog(wx.Dialog):
 
     async def on_fail(self, ex):
         dialog = wx.MessageDialog(
-            self,
-            f"Failed to generate previews:\n{ex}",
-            "Generation Failed",
-            wx.OK | wx.ICON_ERROR,
+            self, 
+            f"Failed to generate previews:\n{ex}", 
+            "Generation Failed", 
+            wx.OK | wx.ICON_ERROR, 
         )
         await wxasync.AsyncShowDialogModal(dialog)
         # dialog.Destroy()
@@ -674,17 +635,7 @@ async def run(app, items):
     op = "replace"
 
     if count > 0:
-        dlg = wx.MessageDialog(
-            app.frame,
-            f"{count} models already have preview files. Do you want to replace them or add them to the preview images list?",
-            "Existing Previews",
-            wx.YES_NO | wx.CANCEL | wx.ICON_QUESTION,
-        )
-        dlg.SetYesNoLabels("Replace", "Append")
-        result = await wxasync.AsyncShowDialogModal(dlg)
-        if result == wx.ID_CANCEL:
-            return
-        op = "replace" if result == wx.ID_YES else "append"
+        op = "append"
 
     dialog = PreviewGeneratorDialog(app.frame, app, items, op)
     dialog.Center()

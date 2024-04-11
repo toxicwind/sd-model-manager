@@ -1,88 +1,212 @@
 {
+  "3": {
+    "inputs": {
+      "seed": 92284232248265,
+      "steps": 7,
+      "cfg": 1.7,
+      "sampler_name": "lcm",
+      "scheduler": "sgm_uniform",
+      "denoise": 1,
+      "model": [
+        "14",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "4": {
+    "inputs": {
+      "ckpt_name": "cirrostratus_v20.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "5": {
+    "inputs": {
+      "width": 840,
+      "height": 960,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
   "6": {
     "inputs": {
-      "text": "masterpiece HDR victorian portrait painting of woman, blonde hair, mountain nature, blue sky\n",
-      "clip": ["21", 1]
+      "text": "A man with a sweaty crotch bulge, a average man, 30 years old, (manly, wide jaw:1.2), striking stare, pubic hair, armpit hair, average muscles, dynamic pose, dynamic, underwear, small scrotum, raw photo, sweat, presperation, detailed modern background, film grain, japanese high fashion detail magazine, hdr, highly detailed photography, vibrant, insanely detailed, hyperdetailed, (vsco:0.4), (intricate details:0.9), (hdr, hyperdetailed:1.2)",
+      "clip": [
+        "12",
+        1
+      ]
     },
-    "class_type": "CLIPTextEncode"
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
   },
   "7": {
     "inputs": {
-      "text": "bad hands, text, watermark\n",
-      "clip": ["21", 1]
+      "text": "simple background, close-up, over saturated, doll, (female, feminine, teen, young:1.2), embedding:SimpleNegativeV3, ",
+      "clip": [
+        "12",
+        1
+      ]
     },
-    "class_type": "CLIPTextEncode"
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "8": {
+    "inputs": {
+      "samples": [
+        "16",
+        0
+      ],
+      "vae": [
+        "11",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "10": {
+    "inputs": {
+      "lora_name": "Mild_detail_adjusterV10_4.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
+        "4",
+        0
+      ],
+      "clip": [
+        "4",
+        1
+      ]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
   },
   "11": {
     "inputs": {
-      "seed": 401859431719756,
-      "steps": 14,
-      "cfg": 8,
-      "sampler_name": "dpmpp_2m",
-      "scheduler": "simple",
-      "denoise": 0.55,
-      "model": ["21", 0],
-      "positive": ["6", 0],
-      "negative": ["7", 0],
-      "latent_image": ["20", 0]
+      "vae_name": "MoistMixV2.vae.pt"
     },
-    "class_type": "KSampler"
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
   },
   "12": {
     "inputs": {
-      "filename_prefix": "ComfyUI",
-      "images": ["13", 0]
+      "lora_name": "LCM_LoRA_Weights_SD15.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
+        "10",
+        0
+      ],
+      "clip": [
+        "10",
+        1
+      ]
     },
-    "class_type": "SaveImage"
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
   },
-  "13": {
+  "14": {
     "inputs": {
-      "samples": ["11", 0],
-      "vae": ["17", 0]
+      "sampling": "lcm",
+      "zsnr": false,
+      "model": [
+        "12",
+        0
+      ]
     },
-    "class_type": "VAEDecode"
+    "class_type": "ModelSamplingDiscrete",
+    "_meta": {
+      "title": "ModelSamplingDiscrete"
+    }
   },
   "16": {
     "inputs": {
-      "ckpt_name": "v2-1_768-ema-pruned.ckpt"
+      "seed": 863486458230928,
+      "steps": 9,
+      "cfg": 1.4000000000000001,
+      "sampler_name": "lcm",
+      "scheduler": "sgm_uniform",
+      "denoise": 0.64,
+      "model": [
+        "14",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "17",
+        0
+      ]
     },
-    "class_type": "CheckpointLoaderSimple"
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
   },
   "17": {
     "inputs": {
-      "vae_name": "animefull-latest.vae.pt"
+      "version": "SD 1.x",
+      "upscale": 1.25,
+      "latent": [
+        "3",
+        0
+      ]
     },
-    "class_type": "VAELoader"
-  },
-  "18": {
-    "inputs": {
-      "image": ""
-    },
-    "class_type": "LoadImage"
-  },
-  "19": {
-    "inputs": {
-      "pixels": ["18", 0],
-      "vae": ["17", 0]
-    },
-    "class_type": "VAEEncode"
-  },
-  "20": {
-    "inputs": {
-      "upscale_method": "bislerp",
-      "scale_by": 2,
-      "samples": ["19", 0]
-    },
-    "class_type": "LatentUpscaleBy"
-  },
-  "21": {
-    "class_type": "LoraLoader",
-    "inputs": {
-      "lora_name": "",
-      "strength_model": 1.0,
-      "strength_clip": 1.0,
-      "model": ["16", 0],
-      "clip": ["16", 1]
+    "class_type": "NNLatentUpscale",
+    "_meta": {
+      "title": "NNLatentUpscale"
     }
   }
 }

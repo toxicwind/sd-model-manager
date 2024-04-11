@@ -27,7 +27,7 @@ parser.add_argument(
     "-l",
     "--listen",
     type=str,
-    default="127.0.0.1",
+    default="0.0.0.0",
     help="Address for model manager server",
 )
 parser.add_argument("-p", "--port", type=int, help="Port for model manager server")
@@ -42,8 +42,8 @@ parser.add_argument(
 
 async def init_server():
     server = await create_app([])
-    host = server["config"].listen
-    port = server["config"].port
+    host = "0.0.0.0"
+    port = 7779
 
     runner = web.AppRunner(server)
     await runner.setup()

@@ -1,108 +1,267 @@
 {
-	"3": {
-		"class_type": "KSampler",
-		"inputs": {
-			"cfg": 8,
-			"denoise": 1,
-			"latent_image": [
-				"5",
-				0
-			],
-			"model": [
-				"10",
-				0
-			],
-			"negative": [
-				"7",
-				0
-			],
-			"positive": [
-				"6",
-				0
-			],
-			"sampler_name": "dpmpp_2m",
-			"scheduler": "karras",
-			"seed": 0,
-			"steps": 20
-		}
-	},
-	"4": {
-		"class_type": "CheckpointLoaderSimple",
-		"inputs": {
-			"ckpt_name": "v1-5-pruned-emaonly.ckpt"
-		}
-	},
-	"5": {
-		"class_type": "EmptyLatentImage",
-		"inputs": {
-			"batch_size": 1,
-			"height": 768,
-			"width": 512
-		}
-	},
-	"6": {
-		"class_type": "CLIPTextEncode",
-		"inputs": {
-			"clip": [
-				"10",
-				1
-			],
-			"text": "masterpiece best quality girl"
-		}
-	},
-	"7": {
-		"class_type": "CLIPTextEncode",
-		"inputs": {
-			"clip": [
-				"10",
-				1
-			],
-			"text": "bad hands"
-		}
-	},
-	"8": {
-		"class_type": "VAEDecode",
-		"inputs": {
-			"samples": [
-				"3",
-				0
-			],
-			"vae": [
-				"11",
-				0
-			]
-		}
-	},
-	"9": {
-		"class_type": "SaveImage",
-		"inputs": {
-			"filename_prefix": "ComfyUI",
-			"images": [
-				"8",
-				0
-			]
-		}
-	},
-	"10": {
-		"class_type": "LoraLoader",
-		"inputs": {
-			"lora_name": "",
-			"strength_model": 1.0,
-			"strength_clip": 1.0,
-			"model": [
-				"4",
-				0
-			],
-			"clip": [
-				"4",
-				1
-			]
-		}
-	},
-	"11": {
-		"class_type": "VAELoader",
-		"inputs": {
-			"vae_name": "animefull-latest.vae.pt"
-		}
-	}
+  "9": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "18",
+        5
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "14": {
+    "inputs": {
+      "sampling": "lcm",
+      "zsnr": false,
+      "model": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingDiscrete",
+    "_meta": {
+      "title": "ModelSamplingDiscrete"
+    }
+  },
+  "18": {
+    "inputs": {
+      "seed": 322309004519804,
+      "steps": 3,
+      "cfg": 1,
+      "sampler_name": "lcm",
+      "scheduler": "sgm_uniform",
+      "denoise": 1,
+      "preview_method": "none",
+      "vae_decode": "true",
+      "model": [
+        "14",
+        0
+      ],
+      "positive": [
+        "21",
+        1
+      ],
+      "negative": [
+        "21",
+        2
+      ],
+      "latent_image": [
+        "21",
+        3
+      ],
+      "optional_vae": [
+        "21",
+        4
+      ],
+      "script": [
+        "20",
+        0
+      ]
+    },
+    "class_type": "KSampler (Efficient)",
+    "_meta": {
+      "title": "KSampler (Efficient)"
+    }
+  },
+  "20": {
+    "inputs": {
+      "upscale_type": "latent",
+      "hires_ckpt_name": "(use same)",
+      "latent_upscaler": "nearest-exact",
+      "pixel_upscaler": "1x-SwatKats_SPAN.pth",
+      "upscale_by": 1.75,
+      "use_same_seed": true,
+      "seed": -1,
+      "hires_steps": 7,
+      "denoise": 0.56,
+      "iterations": 1,
+      "use_controlnet": false,
+      "control_net_name": "ControlNet-v1-1\\control_v11e_sd15_ip2p.pth",
+      "strength": 1,
+      "preprocessor": "none",
+      "preprocessor_imgs": false
+    },
+    "class_type": "HighRes-Fix Script",
+    "_meta": {
+      "title": "HighRes-Fix Script"
+    }
+  },
+  "21": {
+    "inputs": {
+      "ckpt_name": "furryindigoFurryMix_v100Anime.safetensors",
+      "vae_name": "MoistMixV2.vae.pt",
+      "clip_skip": -1,
+      "lora_name": "LCM_LoRA_Weights_SD15.safetensors",
+      "lora_model_strength": 1,
+      "lora_clip_strength": 1,
+      "positive": "anthro,smirking,nudity,small penis underwater, big balls, sitting on rock ledge,looking at viewer,from above,first person view, hot springs,brown lion, male lion, blue mane, black Chinese silk robe,scar on eyebrow,sakura flowers,modern japanese architecture,modern japanese hot spring, hot spring bath",
+      "negative": "symmetrical, excessive fur, (embedding:FastNegativeV2:1.4),  (low quality, normal quality, worst quality:1.3), (low res:1.3), bad anatomy, scales,",
+      "token_normalization": "mean",
+      "weight_interpretation": "A1111",
+      "empty_latent_width": 576,
+      "empty_latent_height": 640,
+      "batch_size": 1,
+      "lora_stack": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "Efficient Loader",
+    "_meta": {
+      "title": "Efficient Loader"
+    }
+  },
+  "23": {
+    "inputs": {
+      "switch_1": "Off",
+      "lora_name_1": "add_detail.safetensors",
+      "model_weight_1": 0.5,
+      "clip_weight_1": 1,
+      "switch_2": "On",
+      "lora_name_2": "add_detail.safetensors",
+      "model_weight_2": 0.62,
+      "clip_weight_2": 1,
+      "switch_3": "Off",
+      "lora_name_3": "None",
+      "model_weight_3": 1,
+      "clip_weight_3": 1
+    },
+    "class_type": "CR LoRA Stack",
+    "_meta": {
+      "title": "💊 CR LoRA Stack"
+    }
+  }
+}
+
+
+{
+  "19": {
+    "inputs": {
+      "detection_hint": "mask-points",
+      "dilation": 27,
+      "threshold": 1,
+      "bbox_expansion": 0,
+      "mask_hint_threshold": 0.58,
+      "mask_hint_use_negative": "Small",
+      "sam_model": [
+        "23",
+        0
+      ],
+      "segs": [
+        "25",
+        0
+      ],
+      "image": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "SAMDetectorCombined",
+    "_meta": {
+      "title": "SAMDetector (combined)"
+    }
+  },
+  "20": {
+    "inputs": {
+      "mask": [
+        "19",
+        0
+      ]
+    },
+    "class_type": "MaskToImage",
+    "_meta": {
+      "title": "Mask To Image (mtb)"
+    }
+  },
+  "21": {
+    "inputs": {
+      "images": [
+        "20",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "22": {
+    "inputs": {
+      "image": "frame_00006.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "23": {
+    "inputs": {
+      "model_name": "sam_vit_b_01ec64.pth",
+      "device_mode": "AUTO"
+    },
+    "class_type": "SAMLoader",
+    "_meta": {
+      "title": "SAMLoader (Impact)"
+    }
+  },
+  "24": {
+    "inputs": {
+      "model_name": "segm/FastSAM-s.pt"
+    },
+    "class_type": "UltralyticsDetectorProvider",
+    "_meta": {
+      "title": "UltralyticsDetectorProvider"
+    }
+  },
+  "25": {
+    "inputs": {
+      "threshold": 0.5,
+      "dilation": 10,
+      "crop_factor": 3,
+      "drop_size": 10,
+      "labels": "all",
+      "segm_detector": [
+        "24",
+        1
+      ],
+      "image": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "SegmDetectorSEGS",
+    "_meta": {
+      "title": "SEGM Detector (SEGS)"
+    }
+  },
+  "26": {
+    "inputs": {
+      "preset": "all",
+      "labels": "vase, all",
+      "segs": [
+        "25",
+        0
+      ]
+    },
+    "class_type": "ImpactSEGSLabelFilter",
+    "_meta": {
+      "title": "SEGS Filter (label)"
+    }
+  },
+  "27": {
+    "inputs": {
+      "segs": [
+        "26",
+        1
+      ]
+    },
+    "class_type": "ImpactSEGSToMaskList",
+    "_meta": {
+      "title": "SEGS to Mask List"
+    }
+  }
 }
